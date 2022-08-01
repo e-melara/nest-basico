@@ -1,54 +1,60 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+
 import { CarsService } from './cars.service';
+import { CreateCarDto, UpdateCarDto } from './dto';
 
 @Controller('cars')
 export class CarsController {
-  constructor(
-    private readonly carsService: CarsService
-  ) { }
+  constructor(private readonly carsService: CarsService) {}
 
   @Get()
   getAllCars() {
-    return this.carsService.findAll()
+    return this.carsService.findAll();
   }
 
   @Get(':id')
-  getCardById(@Param('id', ParseIntPipe) id: number) {
+  getCardById(@Param('id', ParseUUIDPipe) id: string) {
     const cars = this.carsService.findOneById(id);
     if (cars) {
       return cars;
     }
 
     return {
-      message: 'No se encontro el id el carro'
-    }
+      message: 'No se encontro el id el carro',
+    };
   }
 
   // post
   @Post()
-  postCars(@Body() body: any) {
-    console.log(body)
-    return body
+  @UsePipes(ValidationPipe)
+  postCars(@Body() body: CreateCarDto) {
+    const car = this.carsService.create(body);
+    return {
+      car,
+    };
   }
   // update
   @Put(':id')
   patchCars(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: any
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateCarDTO: UpdateCarDto,
   ) {
-    return {
-      body,
-      id
-    }
+    return this.carsService.update(id, updateCarDTO);
   }
   // delete
   @Delete(':id')
-  deleteCard(
-    @Param('id', ParseIntPipe) id: number
-  ) {
-    return {
-      id,
-      'method': 'Delete'
-    }
+  deleteCard(@Param('id', ParseUUIDPipe) id: string) {
+    return this.carsService.delete(id);
   }
 }
