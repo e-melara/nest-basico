@@ -1,26 +1,66 @@
-import { Injectable } from '@nestjs/common';
+import { v4 as uuid } from 'uuid';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
+import { Brand } from './entities/brand.entity';
 
 @Injectable()
 export class BrandsService {
+  private brands: Brand[] = [
+    {
+      id: uuid(),
+      name: 'Toyota',
+      createdAt: Date.now(),
+    },
+  ];
+
   create(createBrandDto: CreateBrandDto) {
-    return 'This action adds a new brand';
+    const brand: Brand = {
+      id: uuid(),
+      name: createBrandDto.name,
+      createdAt: Date.now(),
+    };
+    this.brands.push(brand);
   }
 
   findAll() {
-    return `This action returns all brands`;
+    return this.brands;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} brand`;
+  findOne(id: string) {
+    const brand = this.brands.find(function (brand) {
+      return brand.id === id;
+    });
+    if (!brand) {
+      throw new NotFoundException('Brand not found');
+    }
+    return brand;
   }
 
-  update(id: number, updateBrandDto: UpdateBrandDto) {
-    return `This action updates a #${id} brand`;
+  update(id: string, updateBrandDto: UpdateBrandDto) {
+    let brandDB = this.findOne(id);
+
+    this.brands = this.brands.map(function (brand: Brand) {
+      if (brand.id === id) {
+        brandDB.updatedAt = Date.now();
+        brandDB = {
+          ...brandDB,
+          ...updateBrandDto,
+          id,
+        };
+        return brandDB;
+      }
+      return brand;
+    });
+
+    return brandDB;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} brand`;
+  remove(id: string) {
+    this.findOne(id);
+    this.brands = this.brands.filter(function (brand: Brand) {
+      return brand.id !== id;
+    });
   }
 }
