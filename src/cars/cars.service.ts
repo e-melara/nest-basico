@@ -72,6 +72,6 @@ export class CarsService {
     this.cars = this.cars.filter(function (item) {
       return item.id !== id;
     });
-    return car
+    return car;
   }
 }
